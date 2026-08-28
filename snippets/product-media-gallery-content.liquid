@@ -1108,4 +1108,24 @@
     width: 100% !important;
     height: 100% !important;
   }
+    @media screen and (max-width: 749px) {
+    .product-media-gallery-host .media-gallery--carousel slideshow-component {
+      display: flex;
+      flex-direction: row-reverse;
+    }
+
+    .product-media-gallery-host .media-gallery--carousel .slideshow-controls__thumbnails {
+      flex-direction: column;
+      margin-inline: 0;
+      padding-inline: var(--padding-2xs);
+      padding-block: 0;
+    }
+
+    .product-media-gallery-host .media-gallery--carousel .slideshow-controls__thumbnails .slideshow-control {
+      width: 48px !important;
+      height: auto;
+      aspect-ratio: 1 / 1;
+      flex-shrink: 0;
+    }
+  }
 {% endstylesheet %}
