@@ -1177,19 +1177,17 @@
       height: 14px !important;
       transform: none !important;
     }
-        .product-media-gallery-host .media-gallery--carousel slideshow-controls[thumbnails] {
+      .product-media-gallery-host .media-gallery--carousel slideshow-component {
+      display: flex;
+      flex-direction: row-reverse;
+      align-items: flex-start;
+    }
+
+    .product-media-gallery-host .media-gallery--carousel slideshow-controls[thumbnails] {
       align-self: stretch;
-      min-height: 0;
-    }
-
-    .product-media-gallery-host .media-gallery--carousel .slideshow-controls__thumbnails-container {
-      max-height: 100%;
-      overflow: hidden auto;
-      scrollbar-width: none;
-    }
-
-    .product-media-gallery-host .media-gallery--carousel .slideshow-controls__thumbnails-container::-webkit-scrollbar {
-      display: none;
+      height: 0;
+      min-height: 100%;
+      min-width: 0;
     }
   }
 {% endstylesheet %}
