@@ -9,7 +9,7 @@
  */
 {
   "current": {
-    "logo": "shopify://shop_images/freepik__background__9179_1.png",
+    "logo": "shopify://shop_images/bioroot-logo.webp",
     "logo_height": 36,
     "logo_height_mobile": 35,
     "page_text_color": "{{ settings.color_palette.foreground }}",
