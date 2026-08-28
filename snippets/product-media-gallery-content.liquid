@@ -1108,7 +1108,21 @@
     width: 100% !important;
     height: 100% !important;
   }
+  .product-media-gallery-host .media-gallery--carousel .slideshow-controls__thumbnails .slideshow-control {
+    opacity: 0.45;
+    transition: opacity 0.2s ease;
+    outline: none !important;
+    border: none !important;
+  }
 
+  .product-media-gallery-host .media-gallery--carousel .slideshow-controls__thumbnails .slideshow-control[aria-selected='true'] {
+    opacity: 1;
+  }
+
+  .product-media-gallery-host .media-gallery--carousel .slideshow-controls__thumbnails .slideshow-control:focus-visible {
+    outline: 2px solid currentColor !important;
+    outline-offset: 2px;
+  }
 
 @media screen and (max-width: 749px) {
     .product-media-gallery-host .media-gallery--carousel slideshow-component {
