@@ -1108,4 +1108,29 @@
     width: 100% !important;
     height: 100% !important;
   }
+    @media screen and (min-width: 750px) {
+    .product-media-gallery-host slideshow-controls[thumbnails][pagination-position='left'] {
+      --thumb-gap: 8px;
+    }
+
+    .product-media-gallery-host
+      slideshow-controls[thumbnails][pagination-position='left']
+      .slideshow-controls__thumbnails {
+      height: 100%;
+      gap: var(--thumb-gap);
+      padding-block: 0;
+      padding-inline: 0;
+      justify-content: flex-start;
+    }
+
+    .product-media-gallery-host
+      slideshow-controls[thumbnails][pagination-position='left']
+      .slideshow-controls__thumbnails
+      .slideshow-control {
+      flex: 0 0 calc((100% - var(--thumb-gap) * 4) / 5);
+      width: auto;
+      height: auto;
+      aspect-ratio: 1 / 1;
+    }
+  }
 {% endstylesheet %}
