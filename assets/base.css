@@ -4012,3 +4012,44 @@ main > .shopify-section:first-child .section:not(.disable-section-top-offset) {
     margin-top: calc(var(--header-height) * var(--transparent-header-offset-boolean) * -1);
   }
 }
+
+ @font-face {
+    font-family: 'HelveticaNow';
+    src: url('{{ 'HelveticaNowDisplay-Regular.woff2' | asset_url }}') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'HelveticaNow';
+    src: url('{{ 'HelveticaNowDisplay-RegIta.woff2' | asset_url }}') format('woff2');
+    font-weight: 400;
+    font-style: italic;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'HelveticaNow';
+    src: url('{{ 'HelveticaNowDisplay-Medium.woff2' | asset_url }}') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'HelveticaNow';
+    src: url('{{ 'HelveticaNowDisplay-Bold.woff2' | asset_url }}') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+  }
+  @font-face {
+    font-family: 'HelveticaNow';
+    src: url('{{ 'HelveticaNowDisplay-Black.woff2' | asset_url }}') format('woff2');
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+  }
+
+  body, h1, h2, h3, h4, h5, h6, p, span, div, a, li, ul, ol,
+  button, input, select, textarea, label, .h0, .h1, .h2, .h3 {
+    font-family: 'HelveticaNow', sans-serif !important;
+  }
