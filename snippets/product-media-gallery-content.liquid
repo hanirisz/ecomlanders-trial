@@ -1043,14 +1043,38 @@
 }
 
 @media screen and (min-width: 750px) {
-  .media-gallery--carousel slideshow-controls[thumbnails] .slideshow-controls__thumbnails {
-    max-height: calc(var(--thumbnail-width) * 5 + var(--gap-sm, 8px) * 4);
+  .product-media-gallery-host .media-gallery--carousel slideshow-controls[thumbnails] {
+    --thumb-gap: 8px;
+    align-self: stretch;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .product-media-gallery-host .media-gallery--carousel slideshow-controls[thumbnails] .slideshow-controls__thumbnails {
+    display: flex;
+    flex-direction: column;
+    gap: var(--thumb-gap);
+    height: 100%;
+    min-height: 0;
     overflow-y: auto;
     scrollbar-width: none;
   }
 
-  .media-gallery--carousel slideshow-controls[thumbnails] .slideshow-controls__thumbnails::-webkit-scrollbar {
+  .product-media-gallery-host .media-gallery--carousel slideshow-controls[thumbnails] .slideshow-controls__thumbnails::-webkit-scrollbar {
     display: none;
+  }
+
+  .product-media-gallery-host .media-gallery--carousel slideshow-controls[thumbnails] .slideshow-controls__thumbnail {
+    flex: 0 0 calc((100% - var(--thumb-gap) * 4) / 5);
+    height: calc((100% - var(--thumb-gap) * 4) / 5);
+    width: auto;
+    aspect-ratio: 1 / 1;
+  }
+
+  .product-media-gallery-host .media-gallery--carousel slideshow-controls[thumbnails] .slideshow-controls__thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 }
 
