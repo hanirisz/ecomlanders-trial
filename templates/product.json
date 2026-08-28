@@ -84,6 +84,7 @@
             "slideshow_controls_style": "thumbnails",
             "slideshow_mobile_controls_style": "thumbnails",
             "thumbnail_position": "left",
+            "thumbnail_position_mobile": "left",
             "thumbnail_width": 110,
             "thumbnail_radius": 8,
             "badge_icon": "star",
