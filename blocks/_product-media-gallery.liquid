@@ -252,12 +252,23 @@
       "default": "bottom",
       "visible_if": "{{ block.settings.slideshow_controls_style == 'thumbnails' }}"
     },
+        {
+      "type": "select",
+      "id": "thumbnail_position_mobile",
+      "label": "Mobile position",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "bottom", "label": "Bottom" }
+      ],
+      "default": "bottom",
+      "visible_if": "{{ block.settings.slideshow_mobile_controls_style == 'thumbnails' }}"
+    },
     {
       "type": "range",
       "id": "thumbnail_width",
       "label": "t:settings.width_desktop",
-      "min": 44,
-      "max": 72,
+      "min": 32,
+      "max": 120,
       "step": 1,
       "unit": "px",
       "default": 64,
