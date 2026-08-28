@@ -1,0 +1,249 @@
+{%- doc -%}
+  A single customer testimonial video card for the "video-testimonials" section. Reuses the
+  theme's stock "video" snippet (upload or YouTube/Vimeo link, poster image, click-to-play,
+  accessibility) so playback behaves exactly like the rest of the theme.
+{%- enddoc -%}
+
+{%- liquid
+  assign block_settings = block.settings
+-%}
+
+<div
+  class="video-testimonial spacing-style"
+  ref="slides[]"
+  data-carousel-card
+  style="{% render 'spacing-style', settings: block_settings %}"
+  {{ block.shopify_attributes }}
+>
+  {%- liquid
+    assign poster = block_settings.thumbnail_image | default: block_settings.cover_image
+    assign has_video = false
+    if block_settings.source == 'uploaded' and block_settings.video != blank
+      assign has_video = true
+    elsif block_settings.source == 'url' and block_settings.video_url != blank
+      assign has_video = true
+    endif
+  -%}
+  <div class="video-testimonial__media">
+    {%- if has_video -%}
+      {%- if block_settings.source == 'uploaded' -%}
+        {% render 'video',
+          video: block_settings.video,
+          video_class: 'video-testimonial__video',
+          video_loop: false,
+          video_preview_image: poster | default: block_settings.video.preview_image
+        %}
+      {%- else -%}
+        {% render 'video',
+          video_from_url: true,
+          video: block_settings.video_url.id,
+          video_class: 'video-testimonial__video',
+          video_type: block_settings.video_url.type,
+          video_alt: block_settings.customer_name,
+          video_preview_image: poster
+        %}
+      {%- endif -%}
+    {%- elsif poster != blank -%}
+      <div class="video-testimonial__placeholder">
+        {{ poster | image_url: width: 600 | image_tag: alt: block_settings.customer_name, loading: 'lazy' }}
+        <span class="video-testimonial__placeholder-play" aria-hidden="true">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+        </span>
+      </div>
+    {%- endif -%}
+  </div>
+
+  {%- if block_settings.customer_name != blank -%}
+    <span class="video-testimonial__caption">{{ block_settings.customer_name }}</span>
+  {%- endif -%}
+</div>
+
+{% stylesheet %}
+  .video-testimonial {
+    position: relative;
+    border-radius: var(--style-border-radius-md, 12px);
+    overflow: clip;
+    aspect-ratio: 9 / 16;
+    background: var(--color-border);
+  }
+
+  .video-testimonial__media,
+  .video-testimonial__media deferred-media,
+  .video-testimonial__video {
+    width: 100%;
+    height: 100%;
+  }
+
+  .video-testimonial__media img,
+  .video-testimonial__media video,
+  .video-testimonial__media iframe {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .video-testimonial__placeholder {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+
+  .video-testimonial__placeholder-play {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 64px;
+    height: 64px;
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(2px);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+  }
+
+  .video-testimonial__placeholder-play svg {
+    width: 34px;
+    height: 34px;
+    margin-left: 3px;
+  }
+
+  .video-testimonial__caption {
+    position: absolute;
+    left: var(--margin-sm, 0.75rem);
+    bottom: var(--margin-sm, 0.75rem);
+    background: rgb(0 0 0 / 0.55);
+    color: #fff;
+    font-size: var(--font-size--sm, 0.8rem);
+    font-weight: 600;
+    border-radius: 999px;
+    padding: 0.3em 0.9em;
+    z-index: var(--layer-raised);
+    pointer-events: none;
+  }
+
+  .video-testimonial .deferred-media__poster-button,
+  .video-testimonial [class*='play'] {
+    width: 64px !important;
+    height: 64px !important;
+    background: rgba(255, 255, 255, 0.25) !important;
+    backdrop-filter: blur(2px) !important;
+    border-radius: 50% !important;
+    border: none !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .video-testimonial .deferred-media__poster-button svg,
+  .video-testimonial [class*='play'] svg {
+    width: 34px !important;
+    height: 34px !important;
+    color: #ffffff !important;
+    fill: #ffffff !important;
+    margin-left: 3px;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Testimonial video",
+  "tag": null,
+  "settings": [
+    {
+      "type": "select",
+      "id": "source",
+      "label": "Video source",
+      "options": [
+        { "value": "uploaded", "label": "Upload a video" },
+        { "value": "url", "label": "Link to YouTube or Vimeo" }
+      ],
+      "default": "uploaded"
+    },
+    {
+      "type": "video",
+      "id": "video",
+      "label": "Video",
+      "visible_if": "{{ block.settings.source == 'uploaded' }}"
+    },
+    {
+      "type": "video_url",
+      "id": "video_url",
+      "label": "Video URL",
+      "accept": ["youtube", "vimeo"],
+      "visible_if": "{{ block.settings.source == 'url' }}"
+    },
+    {
+      "type": "image_picker",
+      "id": "cover_image",
+      "label": "Cover image",
+      "visible_if": "{{ block.settings.source == 'url' }}",
+      "info": "Shown before the video plays."
+    },
+    {
+      "type": "image_picker",
+      "id": "thumbnail_image",
+      "label": "Thumbnail image",
+      "info": "Custom poster shown before the video plays. Works for both uploaded and URL videos."
+    },
+    {
+      "type": "text",
+      "id": "customer_name",
+      "label": "Customer name / caption",
+      "info": "Optional, shown as a small pill over the video."
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-start",
+      "label": "Left",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-end",
+      "label": "Right",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "Testimonial video",
+      "category": "Product"
+    }
+  ]
+}
+{% endschema %}

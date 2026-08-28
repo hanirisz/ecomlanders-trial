@@ -1,0 +1,393 @@
+{%- doc -%}
+  A rich, card-style variant picker for a "Bundle" (or first) product option — e.g.
+  "1 Bottle" / "2+1" / "3+2" — showing real per-tier price, compare-at savings, and optional
+  marketing badges. Each tier is edited as a separate "_bundle-option" child block.
+
+  Deliberately reuses the theme's stock <variant-picker> custom element (assets/variant-picker.js)
+  instead of writing new cart JS: the fieldset/radio markup below follows the exact data-attribute
+  contract that component already expects, so selecting a tier updates price, availability and the
+  Add to cart button through the theme's existing, tested variant-select pipeline.
+
+  Setup: the product needs one option (named "Bundle", or the product's first option) with one
+  value — and one real variant — per tier. Each "_bundle-option" child block's "option_value_name"
+  setting must exactly match one of those option values.
+{%- enddoc -%}
+
+{%- liquid
+  assign block_settings = block.settings
+  assign product = closest.product
+  assign bundle_option = product.options_with_values | where: 'name', 'Bundle' | first
+  unless bundle_option
+    assign bundle_option = product.options_with_values.first
+  endunless
+
+  assign has_valid_option = false
+  for child_block in block.blocks
+    assign matched_value = bundle_option.values | where: 'name', child_block.settings.option_value_name | first
+    if matched_value and matched_value.variant
+      assign has_valid_option = true
+    endif
+  endfor
+-%}
+
+<div
+  class="bundle-selector spacing-style"
+  style="
+    {% render 'spacing-style', settings: block_settings %}
+    --bundle-selected-background: {{ block_settings.selected_background_color }};
+    --bundle-selected-border: {{ block_settings.selected_border_color }};
+    --bundle-banner-background: {{ block_settings.banner_background_color }};
+    --bundle-banner-text: {{ block_settings.banner_text_color }};
+    --bundle-save-background: {{ block_settings.save_badge_background_color }};
+    --bundle-save-text: {{ block_settings.save_badge_text_color }};
+    --bundle-ribbon-background: {{ block_settings.best_value_background_color }};
+    --bundle-ribbon-text: {{ block_settings.best_value_text_color }};
+    --bundle-price-color: {{ block_settings.highlight_color }};
+    {% if block_settings.heading_color != blank %}--bundle-heading-color: {{ block_settings.heading_color }};{% endif %}
+  "
+  {{ block.shopify_attributes }}
+>
+  {%- if has_valid_option and block_settings.heading != blank -%}
+    <p class="bundle-selector__heading" style="font-size: {{ block_settings.heading_size }}px;">{{ block_settings.heading }}</p>
+  {%- endif -%}
+
+  {%- if has_valid_option -%}
+    <variant-picker
+      class="bundle-selector__picker variant-picker"
+      data-section-id="{{ section.id }}"
+      data-product-id="{{ product.id }}"
+      data-product-handle="{{ product.handle }}"
+      data-product-title="{{ product.title | escape }}"
+      data-block-id="{{ block.id }}"
+      data-product-url="{{ product.url }}"
+      ref="mainVariantPicker"
+      data-template-product-match="true"
+    >
+      <form class="variant-picker__form">
+        <fieldset
+          class="bundle-selector__fieldset"
+          data-fieldset-index="0"
+          ref="fieldsets[]"
+        >
+          <legend class="visually-hidden">{{ bundle_option.name }}</legend>
+          {% content_for 'blocks' %}
+        </fieldset>
+
+        <script type="application/json">
+          {{ product.selected_or_first_available_variant | json }}
+        </script>
+      </form>
+    </variant-picker>
+
+    <script>
+      (function () {
+        const picker = document.currentScript.previousElementSibling;
+        if (!picker) return;
+
+        function findForm() {
+          return document.querySelector('product-form-component form') || document.querySelector('form[action*="/cart/add"]');
+        }
+
+        function currentQty() {
+          const checked = picker.querySelector('input[data-bundle-quantity][data-current-checked="true"]')
+            || picker.querySelector('input[data-bundle-quantity]:checked');
+          return checked ? (checked.dataset.bundleQuantity || '1') : '1';
+        }
+
+        function syncQuantity() {
+          const qty = currentQty();
+          const form = findForm();
+          if (!form) return;
+
+          const existing = form.querySelectorAll('input[name="quantity"], quantity-selector input, [name="quantity"]');
+          if (existing.length) {
+            existing.forEach((el) => { el.value = qty; });
+          } else {
+            const qtyInput = document.createElement('input');
+            qtyInput.type = 'hidden';
+            qtyInput.name = 'quantity';
+            qtyInput.value = qty;
+            form.appendChild(qtyInput);
+          }
+        }
+
+        document.addEventListener('change', (e) => {
+          if (e.target.closest('input[data-bundle-quantity]')) {
+            setTimeout(syncQuantity, 50);
+          }
+        });
+
+        const originalFetch = window.fetch;
+        window.fetch = function (input, init) {
+          try {
+            const url = typeof input === 'string' ? input : (input && input.url);
+            if (url && url.includes('/cart/add') && init && init.body) {
+              const qty = parseInt(currentQty(), 10) || 1;
+              if (typeof init.body === 'string') {
+                try {
+                  const parsed = JSON.parse(init.body);
+                  parsed.quantity = qty;
+                  if (Array.isArray(parsed.items)) {
+                    parsed.items = parsed.items.map((it) => ({ ...it, quantity: qty }));
+                  }
+                  init.body = JSON.stringify(parsed);
+                } catch (err) {
+                  const params = new URLSearchParams(init.body);
+                  params.set('quantity', qty);
+                  init.body = params.toString();
+                }
+              } else if (init.body instanceof FormData) {
+                init.body.set('quantity', qty);
+              }
+            }
+          } catch (err) {}
+          return originalFetch.apply(this, arguments);
+        };
+
+        document.addEventListener('click', (e) => {
+          if (e.target.closest('.bundle-option')) {
+            setTimeout(syncQuantity, 100);
+          }
+        });
+
+        document.addEventListener('submit', (e) => {
+          const form = e.target;
+          if (!form.matches('form[action*="/cart/add"], product-form-component form')) return;
+          const qty = currentQty();
+          form.querySelectorAll('input[name="quantity"]').forEach((el) => { el.value = qty; });
+          let qtyInput = form.querySelector('input[name="quantity"]');
+          if (!qtyInput) {
+            qtyInput = document.createElement('input');
+            qtyInput.type = 'hidden';
+            qtyInput.name = 'quantity';
+            form.appendChild(qtyInput);
+          }
+          qtyInput.value = qty;
+        }, true);
+
+        document.addEventListener('click', (e) => {
+          const btn = e.target.closest('[name="add"], button[type="submit"], .custom-cta-button');
+          if (!btn) return;
+          const qty = currentQty();
+          const form = findForm();
+          if (!form) return;
+          form.querySelectorAll('input[name="quantity"]').forEach((el) => { el.value = qty; });
+          let qtyInput = form.querySelector('input[name="quantity"]');
+          if (!qtyInput) {
+            qtyInput = document.createElement('input');
+            qtyInput.type = 'hidden';
+            qtyInput.name = 'quantity';
+            form.appendChild(qtyInput);
+          }
+          qtyInput.value = qty;
+        }, true);
+
+        syncQuantity();
+      })();
+    </script>
+  {%- elsif request.design_mode -%}
+    <p class="bundle-selector__empty-state">
+      None of the "Bundle option" blocks below match a real option value on this product yet. Add a
+      "Bundle" option in Shopify Admin with one value per tier (e.g. "1 Bottle", "2+1", "3+2"), each
+      priced on its own variant, then set each block's "Variant option value" to match. This message
+      only shows in the theme editor — shoppers see nothing until it's configured, so the rest of the
+      page (Add to cart with the default variant) still works.
+    </p>
+  {%- endif -%}
+</div>
+
+{% stylesheet %}
+  .bundle-selector__heading {
+    margin: 0 0 var(--margin-sm, 0.75rem);
+    font-weight: 700;
+    color: var(--bundle-heading-color, inherit);
+  }
+
+  .bundle-selector__fieldset {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-sm, 0.75rem);
+    border: 0;
+    padding: 0;
+    margin: 0;
+  }
+
+  .bundle-selector__empty-state {
+    border: 1px dashed var(--color-border);
+    border-radius: var(--style-border-radius-xs);
+    padding: var(--padding-md);
+    opacity: var(--opacity-subdued-text);
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Bundle selector",
+  "tag": null,
+  "blocks": [
+    {
+      "type": "_bundle-option"
+    }
+  ],
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Choose your quantity"
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "label": "Heading size",
+      "min": 14,
+      "max": 48,
+      "step": 1,
+      "unit": "px",
+      "default": 28
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "Heading color"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "selected_background_color",
+      "label": "Selected tier background",
+      "default": "#E7F5EF"
+    },
+    {
+      "type": "color",
+      "id": "highlight_color",
+      "label": "Label highlight color",
+      "default": "#1c7a4d"
+    },
+    {
+      "type": "color",
+      "id": "selected_border_color",
+      "label": "Selected tier border",
+      "default": "#0F3D2E"
+    },
+    {
+      "type": "color",
+      "id": "banner_background_color",
+      "label": "Banner background",
+      "default": "#F3A712"
+    },
+    {
+      "type": "color",
+      "id": "banner_text_color",
+      "label": "Banner text",
+      "default": "#1A1A1A"
+    },
+    {
+      "type": "color",
+      "id": "save_badge_background_color",
+      "label": "\"Save %\" badge background",
+      "default": "#B3261E"
+    },
+    {
+      "type": "color",
+      "id": "save_badge_text_color",
+      "label": "\"Save %\" badge text",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "best_value_background_color",
+      "label": "\"Best value\" ribbon background",
+      "default": "#F3A712"
+    },
+    {
+      "type": "color",
+      "id": "best_value_text_color",
+      "label": "\"Best value\" ribbon text",
+      "default": "#1A1A1A"
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-start",
+      "label": "Left",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-end",
+      "label": "Right",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "Bundle selector",
+      "category": "Product",
+      "blocks": {
+        "option_1": {
+          "type": "_bundle-option",
+          "settings": {
+            "option_value_name": "1 Bottle",
+            "unit_count": 1,
+            "unit_label": "bottle"
+          }
+        },
+        "option_2": {
+          "type": "_bundle-option",
+          "settings": {
+            "option_value_name": "2+1",
+            "unit_count": 3,
+            "unit_label": "bottle",
+            "banner_text": "92% of customers choose: Buy 2, Get 1 Free"
+          }
+        },
+        "option_3": {
+          "type": "_bundle-option",
+          "settings": {
+            "option_value_name": "3+2",
+            "unit_count": 5,
+            "unit_label": "bottle",
+            "best_value_badge": true
+          }
+        }
+      },
+      "block_order": ["option_1", "option_2", "option_3"]
+    }
+  ]
+}
+{% endschema %}

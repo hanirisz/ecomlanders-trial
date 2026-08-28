@@ -1,0 +1,367 @@
+{%- doc -%}
+  "Real Change for Real People" style customer video testimonial carousel, scoped to the
+  width of whatever column it's placed in (e.g. inside "_product-details", matching the Figma
+  design where this sits under the trust/delivery rows in the product info column — not as a
+  full-width section). Reuses the theme's stock slideshow snippet for the same swipe/arrow/dot
+  navigation as the rest of the theme's carousels.
+{%- enddoc -%}
+
+{%- liquid
+  assign block_settings = block.settings
+  assign slide_count = block.blocks.size
+  assign show_arrows = false
+  if block_settings.icons_style != 'none'
+    assign show_arrows = true
+  endif
+-%}
+
+<div
+  class="video-testimonials spacing-style"
+  style="
+    {% render 'spacing-style', settings: block_settings %}
+    {% if block_settings.heading_color != blank %}--video-testimonials-heading-color: {{ block_settings.heading_color }};{% endif %}
+  "
+  {{ block.shopify_attributes }}
+>
+  {%- if block_settings.heading != blank -%}
+    <p class="video-testimonials__heading" style="font-size: {{ block_settings.heading_size }}px;">{{ block_settings.heading }}</p>
+  {%- endif -%}
+
+  {%- capture slides_content -%}
+    {% content_for 'blocks' %}
+  {%- endcapture -%}
+
+  {% capture slideshow_style %}
+    --carousel-columns: {{ block_settings.columns }};
+    --carousel-mobile-columns: {{ block_settings.mobile_columns }};
+    {% render 'gap-style', value: block_settings.columns_gap, name: 'carousel-gap' %}
+  {% endcapture %}
+
+  {% render 'slideshow',
+    class: 'video-testimonials__slideshow',
+    style: slideshow_style,
+    slides: slides_content,
+    show_arrows: false,
+    auto_hide_controls: false,
+    infinite: false,
+    initial_slide: 0,
+    slide_count: slide_count
+  %}
+
+{%- liquid
+    assign per_page = block_settings.columns | at_most: slide_count
+    if per_page < 1
+      assign per_page = 1
+    endif
+    assign page_count = slide_count | divided_by: per_page
+    assign remainder = slide_count | modulo: per_page
+    if remainder > 0
+      assign page_count = page_count | plus: 1
+    endif
+  -%}
+  {%- if page_count > 1 -%}
+    <div class="video-testimonials__controls" data-vt-controls data-vt-per-page="{{ per_page }}">
+      <button type="button" class="video-testimonials__arrow" data-vt-prev aria-label="Previous">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 12H4M4 12l6-6M4 12l6 6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <div class="video-testimonials__dots" data-vt-dots>
+        {%- for i in (1..page_count) -%}
+          <button type="button" class="video-testimonials__dot{% if forloop.first %} is-active{% endif %}" data-vt-dot="{{ forloop.index0 }}" aria-label="Go to page {{ forloop.index }}"></button>
+        {%- endfor -%}
+      </div>
+      <button type="button" class="video-testimonials__arrow" data-vt-next aria-label="Next">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 12h16M20 12l-6-6M20 12l-6 6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+  {%- endif -%}
+</div>
+
+<script>
+  (function () {
+    const root = document.currentScript.previousElementSibling;
+    if (!root) return;
+    const slideshow = root.querySelector('slideshow-component');
+    const controls = root.querySelector('[data-vt-controls]');
+    if (!slideshow || !controls) return;
+
+    const dots = Array.from(controls.querySelectorAll('[data-vt-dot]'));
+
+    controls.querySelector('[data-vt-prev]')?.addEventListener('click', () => slideshow.previous?.());
+    controls.querySelector('[data-vt-next]')?.addEventListener('click', () => slideshow.next?.());
+    const perPage = parseInt(controls.dataset.vtPerPage, 10) || 1;
+
+    function currentPerPage() {
+      return window.matchMedia('(max-width: 749px)').matches ? 1 : perPage;
+    }
+
+    dots.forEach((dot) => {
+      dot.addEventListener('click', () => {
+        const page = parseInt(dot.dataset.vtDot, 10);
+        slideshow.select?.(page * currentPerPage());
+      });
+    });
+
+    function syncActiveDot() {
+      const idx = slideshow.current ?? 0;
+      const activePage = Math.floor(idx / currentPerPage());
+      dots.forEach((d, i) => d.classList.toggle('is-active', i === activePage));
+    }
+
+    ['slideshow:select', 'on:slideshow:select', 'slideshowselect', 'change', 'scroll'].forEach((evt) => {
+      slideshow.addEventListener(evt, syncActiveDot);
+    });
+
+    const scroller = slideshow.querySelector('[ref="scroller"], slideshow-slides');
+    if (scroller) {
+      let raf;
+      scroller.addEventListener('scroll', () => {
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(syncActiveDot);
+      }, { passive: true });
+    }
+
+    syncActiveDot();
+  })();
+</script>
+
+{% stylesheet %}
+  .video-testimonials__heading {
+    margin: 0 0 var(--margin-md, 1rem);
+    font-weight: 700;
+    text-align: center;
+    color: var(--video-testimonials-heading-color, inherit);
+  }
+
+  .video-testimonials__slideshow slideshow-slides {
+    --slideshow-gap: var(--carousel-gap);
+  }
+
+  .video-testimonials__slideshow slideshow-slides > .video-testimonial {
+    flex: 0 0 auto;
+    width: calc(
+      (100% - (var(--carousel-gap, 12px) * (var(--carousel-mobile-columns, 3) - 1))) /
+        var(--carousel-mobile-columns, 3)
+    );
+  }
+
+  .video-testimonials__slideshow .slideshow-control[disabled] {
+    display: none;
+  }
+
+  .video-testimonials__controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+
+  .video-testimonials__arrow {
+    width: 46px;
+    height: 46px;
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border: 2.5px solid #095946;
+    border-radius: 50%;
+    color: #095946;
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.15s ease;
+  }
+
+  .video-testimonials__arrow:hover {
+    background: #f0f7f4;
+  }
+
+  .video-testimonials__arrow svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .video-testimonials__dots {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #F2F2F2;
+    padding: 8px 12px;
+    border-radius: 999px;
+  }
+
+  .video-testimonials__dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: none;
+    padding: 0;
+    background: #ffffff;
+    cursor: pointer;
+    transition: background 0.15s ease;
+  }
+
+  .video-testimonials__dot.is-active {
+    background: #095946;
+  }
+
+  .video-testimonials__slideshow .slideshow-controls__dots button::after {
+    background-color: #cfe3da !important;
+  }
+
+  .video-testimonials__slideshow .slideshow-controls__dots button[aria-selected='true']::after {
+    background-color: #095946 !important;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Video testimonials",
+  "tag": null,
+  "blocks": [
+    {
+      "type": "_video-testimonial-card"
+    }
+  ],
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Real Change for Real People"
+    },
+    {
+      "type": "range",
+      "id": "heading_size",
+      "label": "Heading size",
+      "min": 14,
+      "max": 48,
+      "step": 1,
+      "unit": "px",
+      "default": 28
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "Heading color"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "range",
+      "id": "columns",
+      "label": "Desktop columns",
+      "min": 1,
+      "max": 5,
+      "step": 1,
+      "default": 3
+    },
+    {
+      "type": "select",
+      "id": "mobile_columns",
+      "label": "Mobile columns",
+      "options": [
+        { "value": "1", "label": "1" },
+        { "value": "2", "label": "2" },
+        { "value": "3", "label": "3" }
+      ],
+      "default": "3"
+    },
+    {
+      "type": "range",
+      "id": "columns_gap",
+      "label": "Gap",
+      "min": 0,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "default": 8
+    },
+    {
+      "type": "header",
+      "content": "Navigation"
+    },
+    {
+      "type": "select",
+      "id": "icons_style",
+      "label": "Icon",
+      "options": [
+        { "value": "arrow", "label": "Arrows" },
+        { "value": "chevron", "label": "Chevrons" },
+        { "value": "none", "label": "None" }
+      ],
+      "default": "arrow"
+    },
+    {
+      "type": "select",
+      "id": "icons_shape",
+      "label": "Icon background",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "circle", "label": "Circle" },
+        { "value": "square", "label": "Square" }
+      ],
+      "default": "circle",
+      "visible_if": "{{ block.settings.icons_style != 'none' }}"
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-start",
+      "label": "Left",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-end",
+      "label": "Right",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "Video testimonials",
+      "category": "Product",
+      "blocks": {
+        "video_1": { "type": "_video-testimonial-card" },
+        "video_2": { "type": "_video-testimonial-card" },
+        "video_3": { "type": "_video-testimonial-card" }
+      },
+      "block_order": ["video_1", "video_2", "video_3"]
+    }
+  ]
+}
+{% endschema %}

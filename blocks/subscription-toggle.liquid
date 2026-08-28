@@ -1,0 +1,257 @@
+{%- doc -%}
+  A "subscribe & save" checkbox. Functional only if the product has a subscription selling
+  plan set up in Shopify Admin (e.g. via the Shopify Subscriptions app) — checking it adds the
+  product to the cart on that selling plan, letting Shopify apply the real subscription
+  discount at checkout. If no selling plan exists yet, the checkbox renders disabled.
+{%- enddoc -%}
+
+{%- liquid
+  assign block_settings = block.settings
+  assign product = closest.product
+  assign selling_plan_id = ''
+  if product.selling_plan_groups.size > 0
+    assign first_group = product.selling_plan_groups.first
+    assign selling_plan_id = first_group.selling_plans.first.id
+  endif
+-%}
+
+<script
+  src="{{ 'subscription-toggle.js' | asset_url }}"
+  type="module"
+  fetchpriority="low"
+></script>
+
+<subscription-toggle-component
+  class="subscription-toggle spacing-style"
+  style="
+    {% render 'spacing-style', settings: block_settings %}
+    --subscription-toggle-background: {{ block_settings.background_color }};
+    --subscription-toggle-border: {{ block_settings.border_color }};
+    {% if block_settings.heading_color != blank %}--subscription-toggle-heading-color: {{ block_settings.heading_color }};{% endif %}
+    {% if block_settings.description_color != blank %}--subscription-toggle-description-color: {{ block_settings.description_color }};{% endif %}
+    {% if block_settings.check_color != blank %}--subscription-toggle-check-color: {{ block_settings.check_color }};{% endif %}
+  "
+  data-selling-plan-id="{{ selling_plan_id }}"
+  {{ block.shopify_attributes }}
+>
+  {% render 'checkbox',
+    id: 'SubscriptionToggle-' | append: block.id,
+    name: 'subscription-toggle-opt-in',
+    value: '1',
+    label: '',
+    checked: block_settings.default_checked,
+    disabled: false
+  %}
+  <div class="subscription-toggle__text">
+    {%- if block_settings.label != blank -%}
+      <label class="subscription-toggle__heading" for="SubscriptionToggle-{{ block.id }}">{{ block_settings.label }}</label>
+    {%- endif -%}
+    {%- if block_settings.description != blank -%}
+      <p class="subscription-toggle__description">{{ block_settings.description }}</p>
+    {%- endif -%}
+  </div>
+</subscription-toggle-component>
+
+{% stylesheet %}
+.subscription-toggle {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    background: var(--subscription-toggle-background, transparent);
+    border: 2.5px dashed var(--subscription-toggle-border, var(--color-border));
+    border-radius: 10px;
+    padding: var(--padding-md);
+  }
+
+  .subscription-toggle__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .subscription-toggle__heading {
+    font-weight: 700;
+    font-size: var(--font-size--md, 1.05rem);
+    line-height: 1.25;
+    color: var(--subscription-toggle-heading-color, inherit);
+    cursor: pointer;
+  }
+
+  .subscription-toggle__description {
+    line-height: 1.25;
+  }
+
+  .subscription-toggle .checkbox {
+    display: flex;
+    align-items: center;
+  }
+
+  .subscription-toggle .checkbox {
+    flex-shrink: 0;
+  }
+
+  .subscription-toggle .checkbox {
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .subscription-toggle .checkbox__label {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px !important;
+    min-width: 26px !important;
+    max-width: 26px !important;
+    height: 26px !important;
+    min-height: 26px !important;
+    max-height: 26px !important;
+    aspect-ratio: 1 / 1 !important;
+    box-sizing: border-box !important;
+    border-radius: 8px;
+    border: 2px solid var(--subscription-toggle-check-color, #0F3D2E);
+    background: transparent;
+    cursor: pointer;
+    padding: 0 !important;
+    flex-shrink: 0 !important;
+  }
+
+  .subscription-toggle .checkbox__input:checked + .checkbox__label {
+    background: var(--subscription-toggle-check-color, #0F3D2E);
+  }
+
+  .subscription-toggle .checkbox__label svg {
+    display: none;
+  }
+
+  .subscription-toggle .checkbox__input:checked + .checkbox__label::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 45%;
+    width: 6px;
+    height: 11px;
+    border: solid #ffffff;
+    border-width: 0 2px 2px 0;
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+
+  .subscription-toggle__description {
+    margin: 0;
+    font-size: var(--font-size--sm, 0.8rem);
+    color: var(--subscription-toggle-description-color, inherit);
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Subscription toggle",
+  "tag": null,
+  "settings": [
+    {
+      "type": "text",
+      "id": "label",
+      "label": "Checkbox label",
+      "default": "Save 20% on automatic refills"
+    },
+    {
+      "type": "text",
+      "id": "description",
+      "label": "Description",
+      "default": "Monthly delivery, zero commitment, cancel anytime"
+    },
+    {
+      "type": "checkbox",
+      "id": "default_checked",
+      "label": "Checked by default",
+      "default": true
+    },
+    {
+      "type": "paragraph",
+      "content": "Requires a subscription selling plan on this product (e.g. via the Shopify Subscriptions app) to actually apply a discount. Otherwise the checkbox renders disabled."
+    },
+    {
+      "type": "header",
+      "content": "Appearance"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#E7F5EF"
+    },
+    {
+      "type": "color",
+      "id": "border_color",
+      "label": "Border color",
+      "default": "#0F3D2E"
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "Heading text color"
+    },
+    {
+      "type": "color",
+      "id": "description_color",
+      "label": "Description text color"
+    },
+    {
+      "type": "color",
+      "id": "check_color",
+      "label": "Checkmark color"
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-start",
+      "label": "Left",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-end",
+      "label": "Right",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "Subscription toggle",
+      "category": "Product"
+    }
+  ]
+}
+{% endschema %}

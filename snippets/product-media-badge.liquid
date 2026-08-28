@@ -1,0 +1,73 @@
+{%- doc -%}
+  Renders a small merchandising badge (e.g. "Bestseller") over the main product image, reusing
+  the theme's shared product-badge classes/position/typography settings (the same ones the sale
+  and sold-out badges use on product cards) so it stays visually consistent site-wide.
+
+  @param {string} text - The badge text
+  @param {string} [icon] - 'star', 'fire', or 'none'
+  @param {string} [background_color] - Badge background color
+  @param {string} [text_color] - Badge text color
+
+  @example
+  {% render 'product-media-badge', text: 'Bestseller', icon: 'star' %}
+{%- enddoc -%}
+
+<div
+  class="product-badges product-badges--top-right"
+  style="
+    --badge-border-radius: {{ settings.badge_corner_radius }}px;
+    --badge-font-family: var(--font-{{ settings.badge_font_family }}--family);
+    --badge-font-weight: var(--font-{{ settings.badge_font_family }}--weight);
+    --badge-text-transform: {{ settings.badge_text_transform }};
+  "
+>
+  <div
+    class="product-badges__badge product-badges__badge--rectangle product-media-badge__badge"
+    style="
+      {% if background_color != blank %}background: {{ background_color }};{% endif %}
+      {% if text_color != blank %}color: {{ text_color }};{% endif %}
+    "
+  >
+    {%- unless icon == 'none' or icon == blank -%}
+      <span class="product-media-badge__icon">
+        <svg
+          aria-hidden="true"
+          focusable="false"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+        >
+          <path d="M10 0 L12 8 L20 10 L12 12 L10 20 L8 12 L0 10 L8 8 Z" fill="currentColor" />
+        </svg>
+      </span>
+    {%- endunless -%}
+    {{- text -}}
+  </div>
+</div>
+
+{% render 'product-badges-styles' %}
+
+{% stylesheet %}
+  .product-media-badge__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+    font-weight: 700 !important;
+  }
+
+  .product-media-gallery-host .product-media-container {
+    position: relative;
+  }
+
+  .product-media-gallery-host .product-badges {
+    top: 20px !important;
+    right: 20px !important;
+    left: auto !important;
+    bottom: auto !important;
+  }
+
+  .product-media-badge__icon,
+  .product-media-badge__icon svg {
+    width: 0.9em;
+    height: 0.9em;
+  }
+{% endstylesheet %}

@@ -1,0 +1,212 @@
+{%- liquid
+  assign block_settings = block.settings
+  assign rating = block_settings.rating
+  assign full_stars = rating | floor
+  assign has_half = false
+  assign remainder = rating | minus: full_stars
+  if remainder >= 0.25 and remainder < 0.75
+    assign has_half = true
+  elsif remainder >= 0.75
+    assign full_stars = full_stars | plus: 1
+  endif
+  assign half_star_position = full_stars | plus: 1
+-%}
+
+<div
+  class="star-rating spacing-style"
+  style="
+    {% render 'spacing-style', settings: block_settings %}
+    --star-rating-color: {{ block_settings.star_color }};
+    --star-rating-text-color: {{ block_settings.text_color }};
+    --star-rating-size: {{ block_settings.star_size }}px;
+    --star-rating-text-size: {{ block_settings.text_size }}px;
+    justify-content: {{ block_settings.alignment }};
+  "
+  {{ block.shopify_attributes }}
+>
+  <span class="star-rating__stars" aria-label="Rated {{ rating }} out of 5">
+    {%- for i in (1..5) -%}
+      {%- if i <= full_stars -%}
+        <svg class="star-rating__star" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M10 1.5l2.6 5.27 5.82.85-4.21 4.1.99 5.79L10 14.77l-5.2 2.74.99-5.79-4.21-4.1 5.82-.85z"/>
+        </svg>
+      {%- elsif has_half and i == half_star_position -%}
+        <svg class="star-rating__star" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <defs>
+            <linearGradient id="half-{{ block.id }}">
+              <stop offset="50%" stop-color="var(--star-rating-color)"/>
+              <stop offset="50%" stop-color="transparent"/>
+            </linearGradient>
+          </defs>
+          <path fill="url(#half-{{ block.id }})" stroke="var(--star-rating-color)" stroke-width="1" d="M10 1.5l2.6 5.27 5.82.85-4.21 4.1.99 5.79L10 14.77l-5.2 2.74.99-5.79-4.21-4.1 5.82-.85z"/>
+        </svg>
+      {%- else -%}
+        <svg class="star-rating__star star-rating__star--empty" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path fill="none" stroke="var(--star-rating-color)" stroke-width="1" d="M10 1.5l2.6 5.27 5.82.85-4.21 4.1.99 5.79L10 14.77l-5.2 2.74.99-5.79-4.21-4.1 5.82-.85z"/>
+        </svg>
+      {%- endif -%}
+    {%- endfor -%}
+  </span>
+  {%- if block_settings.text != blank -%}
+    <span class="star-rating__text">{{ block_settings.text }}</span>
+  {%- endif -%}
+</div>
+
+{% stylesheet %}
+  .star-rating {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-2xs, 0.5rem);
+    flex-wrap: nowrap;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .star-rating__stars {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .star-rating__star {
+    width: var(--star-rating-size, 18px);
+    height: var(--star-rating-size, 18px);
+    fill: var(--star-rating-color, #E8A33D);
+    flex-shrink: 0;
+  }
+
+  .star-rating__text {
+    color: var(--star-rating-text-color, inherit);
+    font-size: var(--star-rating-text-size, 15px);
+    min-width: 0;
+  }
+
+  @media screen and (max-width: 749px) {
+    .star-rating__text {
+      font-size: clamp(12px, 3.4vw, var(--star-rating-text-size, 15px));
+    }
+  }
+
+  @media screen and (min-width: 750px) and (max-width: 1024px) {
+    .star-rating__text {
+      font-size: clamp(11px, 1.6vw, var(--star-rating-text-size, 15px));
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Star rating",
+  "tag": null,
+  "settings": [
+    {
+      "type": "range",
+      "id": "rating",
+      "label": "Rating",
+      "min": 0,
+      "max": 5,
+      "step": 0.1,
+      "default": 4.8
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Text",
+      "default": "<p>Rated 4.8 'Excellent' | 45k+ Customers</p>"
+    },
+    {
+      "type": "select",
+      "id": "alignment",
+      "label": "Alignment",
+      "options": [
+        { "value": "flex-start", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "flex-end", "label": "Right" }
+      ],
+      "default": "flex-start"
+    },
+    {
+      "type": "color",
+      "id": "star_color",
+      "label": "Star color",
+      "default": "#E8A33D"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#1A1A1A"
+    },
+    {
+      "type": "range",
+      "id": "star_size",
+      "label": "Star size",
+      "min": 10,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "default": 18
+    },
+    {
+      "type": "range",
+      "id": "text_size",
+      "label": "Text size",
+      "min": 10,
+      "max": 30,
+      "step": 1,
+      "unit": "px",
+      "default": 15
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-start",
+      "label": "Left",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-end",
+      "label": "Right",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "Star rating",
+      "category": "Product"
+    }
+  ]
+}
+{% endschema %}

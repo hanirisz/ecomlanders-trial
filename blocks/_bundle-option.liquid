@@ -1,0 +1,381 @@
+{%- doc -%}
+  One tier of a "bundle-selector" block (e.g. "1 Bottle" or "2+1"). Renders as a radio input
+  using the same data-attribute contract as the theme's stock variant picker, so selecting it
+  drives the real <variant-picker> component — price, savings % and "per bottle" price all come
+  from the matching Shopify variant's real price / compare-at price, never hard-coded.
+
+  "option_value_name" must exactly match one of the values of the product's "Bundle" option
+  (or its first option, if none is named "Bundle").
+
+  Display label vs option value:
+    The tile shows "display_label" (e.g. "Buy 2, Get 1 Free") if set, otherwise the raw
+    option value name. "label_highlight" wraps a substring of the label in the accent colour
+    (e.g. the "1 Free" part turns green), matching the Figma.
+{%- enddoc -%}
+
+{%- liquid
+  assign block_settings = block.settings
+  assign product = closest.product
+  assign bundle_option = product.options_with_values | where: 'name', 'Bundle' | first
+  unless bundle_option
+    assign bundle_option = product.options_with_values.first
+  endunless
+  assign option_value = bundle_option.values | where: 'name', block_settings.option_value_name | first
+
+  assign input_index = 0
+  for value in bundle_option.values
+    if value.id == option_value.id
+      assign input_index = forloop.index0
+    endif
+  endfor
+-%}
+
+{%- if option_value and option_value.variant -%}
+  {%- liquid
+    assign variant = option_value.variant
+    assign unit_count = block_settings.unit_count | default: 1
+    assign unit_label = block_settings.unit_label | default: 'bottle'
+
+    assign has_savings = false
+    if variant.compare_at_price > variant.price
+      assign has_savings = true
+      assign savings_percent = variant.compare_at_price | minus: variant.price | times: 100.0 | divided_by: variant.compare_at_price | round
+    endif
+
+    if unit_count > 0
+      assign price_per_unit = variant.price | times: 1.0 | divided_by: unit_count | round
+    else
+      assign price_per_unit = variant.price
+    endif
+
+    # A File-type metafield returns a file object, not an image — unwrap its
+    # preview image (falls back to the object itself for image-reference types).
+    assign meta_file = variant.metafields.custom.bundle_image.value
+    assign meta_img = meta_file.preview_image | default: meta_file
+
+    assign option_media = block_settings.image_override | default: meta_img | default: variant.featured_image | default: product.featured_image
+    assign radio_name = bundle_option.name | handleize | append: '-' | append: product.id
+
+    # Build the display label, optionally highlighting a substring in the accent colour.
+    assign shown_label = block_settings.display_label | default: option_value.name
+    if block_settings.label_highlight != blank and shown_label contains block_settings.label_highlight
+      assign hl_open = '<span class="bundle-option__title-em">'
+      assign hl = hl_open | append: block_settings.label_highlight | append: '</span>'
+      assign shown_label = shown_label | replace: block_settings.label_highlight, hl
+    endif
+  -%}
+
+  <label
+    class="bundle-option{% if option_value.available == false %} bundle-option--sold-out{% endif %}"
+    {{ block.shopify_attributes }}
+  >
+    {%- if block_settings.banner_text != blank -%}
+      <span class="bundle-option__banner">
+        {{ block_settings.banner_text }}
+      </span>
+    {%- endif -%}
+
+    {%- if block_settings.best_value_badge -%}
+      <span class="bundle-option__ribbon">Best Value</span>
+    {%- endif -%}
+
+    <span class="bundle-option__row">
+      <input
+        type="radio"
+        class="bundle-option__input"
+        name="{{ radio_name }}"
+        value="{{ option_value | escape }}"
+        aria-label="{{ option_value.name | escape }}{% if option_value.available == false %} - {{ 'products.product.sold_out' | t }}{% endif %}"
+        {% if option_value.available == false %}
+          aria-disabled="true"
+        {% endif %}
+        data-previous-checked="false"
+        data-fieldset-index="0"
+        data-input-index="{{ input_index }}"
+        data-option-name="{{ bundle_option.name | escape }}"
+        data-option-value-id="{{ option_value.id }}"
+        data-option-available="{{ option_value.available }}"
+        data-connected-product-url="{{ option_value.product_url }}"
+        {% if option_value.variant.id %}
+          data-variant-id="{{ option_value.variant.id }}"
+        {% endif %}
+        data-bundle-quantity="{{ block_settings.unit_count | default: 1 }}"
+        {% if option_value.selected %}
+          data-current-checked="true"
+          checked
+        {% else %}
+          data-current-checked="false"
+        {% endif %}
+      >
+
+      {%- if option_media -%}
+        <span class="bundle-option__media">
+          {{ option_media | image_url: width: 200 | image_tag: widths: '100, 200', sizes: '96px', loading: 'lazy' }}
+          {%- if has_savings -%}
+            <span class="bundle-option__save">Save {{ savings_percent }}%</span>
+          {%- endif -%}
+        </span>
+      {%- endif -%}
+
+      <span class="bundle-option__body">
+        <span class="bundle-option__title">{{ shown_label }}</span>
+        {%- if option_value.available == false -%}
+          <span class="bundle-option__sold-out">{{ 'products.product.sold_out' | t }}</span>
+        {%- else -%}
+          <span class="bundle-option__unit-price">
+            {% render 'format-price', price: price_per_unit %} / {{ unit_label }}
+          </span>
+        {%- endif -%}
+      </span>
+
+      <span class="bundle-option__price">
+        <span class="bundle-option__current-price">{% render 'format-price', price: variant.price %}</span>
+        {%- if has_savings -%}
+          <span class="bundle-option__compare-price">{% render 'format-price', price: variant.compare_at_price %}</span>
+        {%- endif -%}
+      </span>
+    </span>
+  </label>
+{%- elsif request.design_mode -%}
+  <p class="bundle-option bundle-option--missing">
+    No variant found for "{{ block_settings.option_value_name }}". Check that the product's
+    "Bundle" option has a value with this exact name.
+  </p>
+{%- endif -%}
+
+{% stylesheet %}
+  .bundle-option {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    position: relative;
+    border: 2.5px solid #ededed;
+    border-radius: 10px;
+    /* visible (not clip) so the Best Value pill can sit above the top edge */
+    overflow: visible;
+    cursor: pointer;
+    /* accent colours — override from the parent block if you want them editable */
+    --bundle-accent: var(--bundle-price-color, #1c7a4d);
+    --bundle-title: var(--bundle-title-color, #0f3d2e);
+  }
+
+  .bundle-option:has(.bundle-option__input:checked) {
+    border-color: #095946;
+    border-width: 2.5px;
+    background: var(--bundle-selected-background, transparent);
+  }
+
+  .bundle-option:has(.bundle-option__input:checked) .bundle-option__banner {
+    margin: -2.5px -2.5px 0 -2.5px;
+    width: calc(100% + 5px);
+    box-sizing: border-box;
+    border: 2.5px solid #095946;
+    border-bottom: 0;
+    border-radius: 8px 8px 0 0;
+  }
+
+  .bundle-option:has(.bundle-option__input:focus-visible) {
+    outline: var(--focus-outline-width) solid currentcolor;
+    outline-offset: var(--focus-outline-offset);
+  }
+
+  .bundle-option--sold-out {
+    cursor: not-allowed;
+    opacity: var(--opacity-muted-text, 0.6);
+  }
+
+  .bundle-option--missing {
+    border: 1px dashed var(--color-error);
+    color: var(--color-error);
+    padding: var(--padding-md);
+  }
+
+  /* Radio kept for accessibility + cart logic, but hidden like the Figma */
+  .bundle-option__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+    margin: 0;
+  }
+
+  .bundle-option__banner {
+    display: block;
+    width: calc(100% + 5px);
+    box-sizing: border-box;
+    margin: -2.5px -2.5px 0 -2.5px;
+    background: var(--bundle-banner-background, #f3a712);
+    color: var(--bundle-banner-text, #1a1a1a);
+    font-size: var(--font-size--sm, 0.85rem);
+    font-weight: 600;
+    text-align: center;
+    padding: 0.6rem var(--padding-sm);
+    border-radius: 8px 8px 0 0;
+  }
+
+  .bundle-option__ribbon {
+    position: absolute;
+    top: -0.7rem;
+    right: 1rem;
+    background: var(--bundle-ribbon-background, #f3a712);
+    color: var(--bundle-ribbon-text, #1a1a1a);
+    font-size: var(--font-size--xs, 0.75rem);
+    font-weight: 700;
+    border-radius: 999px;
+    padding: 0.3em 0.9em;
+    z-index: 2;
+  }
+
+  .bundle-option__row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: var(--gap-md, 1rem);
+    min-height: 104px;
+    padding: var(--padding-md, 1rem);
+    box-sizing: border-box;
+  }
+
+  .bundle-option__media {
+    position: relative;
+    flex-shrink: 0;
+    width: 5rem;
+    height: 5rem;
+  }
+
+  .bundle-option__media {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .bundle-option__media img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .bundle-option__save {
+    position: absolute;
+    left: 50%;
+    bottom: -.06rem;
+    transform: translateX(-50%);
+    background: var(--bundle-save-background, #b3261e);
+    color: var(--bundle-save-text, #fff);
+    font-size: var(--font-size--xs, 0.72rem);
+    font-weight: 700;
+    border-radius: 6px;
+    padding: 0.15em 0.55em;
+    white-space: nowrap;
+    z-index: 1;
+  }
+
+  .bundle-option__body {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .bundle-option__title {
+    font-weight: 700;
+    font-size: var(--font-size--md, 1.05rem);
+    color: var(--bundle-title);
+  }
+
+  .bundle-option__title-em {
+    color: var(--bundle-accent);
+  }
+
+  .bundle-option__unit-price,
+  .bundle-option__sold-out {
+    font-size: var(--font-size--sm, 0.9rem);
+    opacity: var(--opacity-subdued-text);
+  }
+
+  .bundle-option__price {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    flex-shrink: 0;
+    gap: 0.1rem;
+    text-align: right;
+  }
+
+  .bundle-option__current-price {
+    font-weight: 700;
+    font-size: var(--font-size--md, 1.1rem);
+    color: var(--bundle-accent);
+  }
+
+  .bundle-option__compare-price {
+    font-size: var(--font-size--sm, 0.9rem);
+    text-decoration: line-through;
+    opacity: var(--opacity-subdued-text);
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Bundle option",
+  "tag": null,
+  "settings": [
+    {
+      "type": "text",
+      "id": "option_value_name",
+      "label": "Variant option value",
+      "default": "1 Bottle",
+      "info": "Must exactly match a value of the product's \"Bundle\" option in Shopify Admin."
+    },
+    {
+      "type": "text",
+      "id": "display_label",
+      "label": "Display label"
+    },
+    {
+      "type": "text",
+      "id": "label_highlight",
+      "label": "Highlight part of label"
+    },
+    {
+      "type": "range",
+      "id": "unit_count",
+      "label": "Quantity added to cart",
+      "min": 1,
+      "max": 20,
+      "step": 1,
+      "default": 1
+    },
+    {
+      "type": "text",
+      "id": "unit_label",
+      "label": "Unit label",
+      "default": "bottle"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "banner_text",
+      "label": "Banner text"
+    },
+    {
+      "type": "checkbox",
+      "id": "best_value_badge",
+      "label": "Show \"Best Value\" ribbon",
+      "default": false
+    },
+    {
+      "type": "image_picker",
+      "id": "image_override",
+      "label": "Image override"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Bundle option",
+      "category": "Product"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,192 @@
+{%- doc -%}
+  Renders a single icon + label badge, meant to be repeated inside a row (e.g. a "group" block
+  set to horizontal direction) to build a trust-badge strip like "Joint Health Support",
+  "Third Party Tested", "Inflammation Relief".
+
+  The icon setting is metafield-connectable from the theme editor ("Connect dynamic source"),
+  so a merchant can bind it to a per-product custom icon metafield without any code changes.
+{%- enddoc -%}
+
+{%- liquid
+  assign block_settings = block.settings
+-%}
+
+<div
+  class="icon-badge spacing-style"
+  style="
+    {% render 'spacing-style', settings: block_settings %}
+    --icon-badge-background: {{ block_settings.background_color }};
+    --icon-badge-text: {{ block_settings.text_color }};
+    --icon-badge-radius: {{ block_settings.border_radius }}px;
+  "
+  {{ block.shopify_attributes }}
+>
+  {%- render 'icon-or-image',
+    icon: block_settings.icon,
+    image_upload: block_settings.image_upload,
+    width: block_settings.icon_width,
+    class_name: 'icon-badge__icon'
+  -%}
+  {%- if block_settings.label != blank -%}
+    <span class="icon-badge__label">{{ block_settings.label }}</span>
+  {%- endif -%}
+</div>
+
+{% stylesheet %}
+  .icon-badge {
+    display: flex;
+    flex: 1 1 0;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap-2xs, 0.4rem);
+    text-align: center;
+    background: var(--icon-badge-background, var(--color-foreground));
+    color: var(--icon-badge-text, var(--color-background));
+    border-radius: var(--icon-badge-radius, 8px);
+    padding: var(--padding-md) var(--padding-sm);
+    min-width: 0;
+  }
+
+  .icon-badge__icon,
+  .icon-badge__icon svg {
+    width: var(--icon-size-md, 24px);
+    height: var(--icon-size-md, 24px);
+    flex-shrink: 0;
+  }
+
+  .icon-badge__label {
+    font-size: var(--font-size--sm, 0.75rem);
+    font-weight: 600;
+    line-height: 1.2;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Icon badge",
+  "tag": null,
+  "settings": [
+    {
+      "type": "select",
+      "id": "icon",
+      "label": "Icon",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "heart", "label": "Heart" },
+        { "value": "check_box", "label": "Checkmark" },
+        { "value": "stopwatch", "label": "Clock" },
+        { "value": "leaf", "label": "Leaf" },
+        { "value": "star", "label": "Star" },
+        { "value": "lock", "label": "Lock" },
+        { "value": "plant", "label": "Plant" },
+        { "value": "fire", "label": "Fire" },
+        { "value": "eye", "label": "Eye" },
+        { "value": "recycle", "label": "Recycle" },
+        { "value": "truck", "label": "Truck" }
+      ],
+      "default": "lock",
+      "info": "Used when no custom icon image is uploaded below."
+    },
+    {
+      "type": "image_picker",
+      "id": "image_upload",
+      "label": "Custom icon image",
+      "info": "Upload a custom icon, or connect this setting to a product metafield in the theme editor to vary the icon per product."
+    },
+    {
+      "type": "range",
+      "id": "icon_width",
+      "label": "Icon size",
+      "min": 12,
+      "max": 64,
+      "step": 1,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "text",
+      "id": "label",
+      "label": "Label",
+      "default": "Joint Health Support",
+      "info": "Can be connected to a product metafield in the theme editor."
+    },
+    {
+      "type": "header",
+      "content": "Appearance"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#0F3D2E"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "label": "Corner radius",
+      "min": 0,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "default": 8
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-start",
+      "label": "Left",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-end",
+      "label": "Right",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "Icon badge",
+      "category": "Product"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,203 @@
+{%- liquid
+  assign animation_duration = section.settings.scroll_speed
+  assign gap = section.settings.item_gap
+-%}
+
+<div
+  class="marquee-section"
+  style="
+    --marquee-bg: {{ section.settings.background_color }};
+    --marquee-color: {{ section.settings.text_color }};
+    --marquee-gap: {{ gap }}px;
+    --marquee-duration: {{ animation_duration }}s;
+    --marquee-font-size: {{ section.settings.font_size }}px;
+    padding-block: {{ section.settings.padding_vertical }}px;
+  "
+>
+  {%- if section.blocks.size > 0 -%}
+    <div class="marquee-section__viewport">
+      <div class="marquee-section__track">
+        {%- for i in (1..8) -%}
+          <div class="marquee-section__group" {% if i != 1 %}aria-hidden="true"{% endif %}>
+            {%- for block in section.blocks -%}
+              <div class="marquee-section__item" {{ block.shopify_attributes }}>
+                <span class="marquee-section__text">{{ block.settings.text }}</span>
+                {%- if section.settings.show_separator -%}
+                  <span class="marquee-section__separator">{{ section.settings.separator_character }}</span>
+                {%- endif -%}
+              </div>
+            {%- endfor -%}
+          </div>
+        {%- endfor -%}
+      </div>
+    </div>
+  {%- endif -%}
+</div>
+
+{% stylesheet %}
+  .marquee-section {
+    background-color: var(--marquee-bg);
+    overflow: hidden;
+    width: 100%;
+  }
+
+  .marquee-section__viewport {
+    display: flex;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  .marquee-section__track {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    animation: marquee-scroll var(--marquee-duration) linear infinite;
+  }
+
+  .marquee-section__group {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .marquee-section__item {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: var(--marquee-gap);
+    padding-inline-end: var(--marquee-gap);
+  }
+
+  .marquee-section__text {
+    color: var(--marquee-color);
+    font-size: var(--marquee-font-size);
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .marquee-section__separator {
+    color: var(--marquee-color);
+    font-size: var(--marquee-font-size);
+    font-weight: 700;
+  }
+
+  @keyframes marquee-scroll {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-12.5%);
+    }
+  }
+
+  .marquee-section:hover .marquee-section__track {
+    animation-play-state: paused;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-section__track {
+      animation: none;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Scrolling marquee",
+  "tag": "section",
+  "class": "section-marquee",
+  "settings": [
+    {
+      "type": "range",
+      "id": "scroll_speed",
+      "label": "Scroll speed",
+      "min": 10,
+      "max": 120,
+      "step": 5,
+      "unit": "s",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "item_gap",
+      "label": "Gap between items",
+      "min": 10,
+      "max": 120,
+      "step": 2,
+      "unit": "px",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "font_size",
+      "label": "Font size",
+      "min": 12,
+      "max": 48,
+      "step": 1,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "padding_vertical",
+      "label": "Vertical padding",
+      "min": 0,
+      "max": 80,
+      "step": 2,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#0F3D2E"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_separator",
+      "label": "Show separator between items",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "separator_character",
+      "label": "Separator character",
+      "default": "•"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "text_item",
+      "name": "Text",
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Text",
+          "default": "Comfortable knees and hips"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Scrolling marquee",
+      "blocks": [
+        { "type": "text_item", "settings": { "text": "Comfortable knees and hips" } },
+        { "type": "text_item", "settings": { "text": "Smoother daily movement" } },
+        { "type": "text_item", "settings": { "text": "Easier morning starts" } },
+        { "type": "text_item", "settings": { "text": "Feel more flexible" } }
+      ]
+    }
+  ]
+}
+{% endschema %}

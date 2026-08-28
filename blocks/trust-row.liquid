@@ -1,0 +1,205 @@
+{%- doc -%}
+  A single icon + text (+ optional link) row, meant to be repeated inside a "group" block
+  (column direction) to build a trust/delivery info list: shipping, guarantee, ingredients link.
+
+  For live inventory status, use the theme's built-in "Product inventory" block instead of this
+  one — it reflects real Shopify inventory data rather than editable copy.
+{%- enddoc -%}
+
+{%- liquid
+  assign block_settings = block.settings
+-%}
+
+<div
+  class="trust-row spacing-style"
+  style="{% render 'spacing-style', settings: block_settings %}"
+  {{ block.shopify_attributes }}
+>
+  {%- render 'icon-or-image',
+    icon: block_settings.icon,
+    image_upload: block_settings.image_upload,
+    width: 18,
+    class_name: 'trust-row__icon'
+  -%}
+  {%- if block_settings.link != blank -%}
+    <a
+      href="{{ block_settings.link }}"
+      class="trust-row__text trust-row__text--link"
+      {% if block_settings.open_in_new_tab %}
+        target="_blank" rel="noopener"
+      {% endif %}
+    >
+      {{- block_settings.text -}}
+    </a>
+  {%- else -%}
+    <span class="trust-row__text">{{ block_settings.text }}</span>
+  {%- endif -%}
+  {%- if block_settings.show_flag -%}
+    {%- if block_settings.flag_image != blank -%}
+      <span class="trust-row__flag">
+        {{ block_settings.flag_image | image_url: width: 60 | image_tag: alt: '', loading: 'lazy' }}
+      </span>
+    {%- endif -%}
+    {%- if block_settings.flag_text != blank -%}
+      <span class="trust-row__flag-text">{{ block_settings.flag_text }}</span>
+    {%- endif -%}
+  {%- endif -%}
+</div>
+
+{% stylesheet %}
+  .trust-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .trust-row__icon,
+  .trust-row__icon svg,
+  .trust-row__icon img {
+    width: var(--icon-size-sm, 18px);
+    height: var(--icon-size-sm, 18px);
+    flex-shrink: 0;
+    object-fit: contain;
+  }
+
+  .trust-row__text {
+    font-size: 16px;
+    color: inherit;
+  }
+
+  .trust-row__text--link {
+    text-decoration: underline;
+  }
+
+  .trust-row__flag {
+    display: inline-flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .trust-row__flag img {
+    width: 24px;
+    height: auto;
+    border-radius: 2px;
+  }
+
+  .trust-row__flag-text {
+    font-size: 16px;
+    font-weight: 700;
+    color: inherit;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Trust row",
+  "tag": null,
+  "settings": [
+    {
+      "type": "select",
+      "id": "icon",
+      "label": "Icon",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "truck", "label": "Truck" },
+        { "value": "lock", "label": "Lock" },
+        { "value": "recycle", "label": "Recycle" },
+        { "value": "check_box", "label": "Checkmark" },
+        { "value": "map_pin", "label": "Map pin" },
+        { "value": "question_mark", "label": "Question mark" },
+        { "value": "clipboard", "label": "Clipboard" }
+      ],
+      "default": "truck"
+    },
+    {
+      "type": "image_picker",
+      "id": "image_upload",
+      "label": "Custom icon image"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_flag",
+      "label": "Show flag after text",
+      "default": false
+    },
+    {
+      "type": "image_picker",
+      "id": "flag_image",
+      "label": "Flag image"
+    },
+    {
+      "type": "text",
+      "id": "flag_text",
+      "label": "Text after flag",
+      "visible_if": "{{ block.settings.show_flag }}"
+    },
+    {
+      "type": "text",
+      "id": "text",
+      "label": "Text",
+      "default": "Fast, tracked shipping"
+    },
+    {
+      "type": "url",
+      "id": "link",
+      "label": "Link"
+    },
+    {
+      "type": "checkbox",
+      "id": "open_in_new_tab",
+      "label": "Open link in new tab",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 4
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 4
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-start",
+      "label": "Left",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-end",
+      "label": "Right",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "Trust row",
+      "category": "Product"
+    }
+  ]
+}
+{% endschema %}

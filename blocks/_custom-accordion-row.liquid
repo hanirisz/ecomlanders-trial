@@ -1,0 +1,166 @@
+{%- liquid
+  assign block_settings = block.settings
+-%}
+
+<details
+  class="custom-accordion-row"
+  {% if block_settings.open_by_default %}open{% endif %}
+  {{ block.shopify_attributes }}
+>
+  <summary class="custom-accordion-row__header">
+    <span class="custom-accordion-row__heading">{{ block_settings.heading }}</span>
+    <span class="custom-accordion-row__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </span>
+  </summary>
+  <div class="custom-accordion-row__body">
+    <div class="custom-accordion-row__body-inner">
+      {{ block_settings.content }}
+    </div>
+  </div>
+</details>
+
+{% stylesheet %}
+  .custom-accordion-row {
+    border: 1px solid var(--accordion-border, #e5e5e5);
+    border-radius: var(--accordion-radius, 8px);
+    background: var(--accordion-background, #fff);
+    overflow: hidden;
+  }
+
+  .custom-accordion-row__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 15px;
+    cursor: pointer;
+    list-style: none;
+    font-weight: 500;
+    font-size: var(--font-size--md, 1rem);
+    color: var(--accordion-heading-color, #1a1a1a);
+  }
+
+  .custom-accordion-row__header::-webkit-details-marker {
+    display: none;
+  }
+
+  .custom-accordion-row__icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    color: var(--accordion-icon-color, #1a1a1a);
+    transition: transform 0.2s ease;
+  }
+
+  .custom-accordion-row__icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .custom-accordion-row[open] .custom-accordion-row__icon {
+    transform: rotate(45deg);
+  }
+
+  .custom-accordion-row__body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    will-change: max-height;
+  }
+
+  .custom-accordion-row__body-inner {
+    padding: 0 24px 20px;
+    color: var(--accordion-body-color, #444);
+    font-size: var(--font-size--sm, 0.95rem);
+    line-height: 1.5;
+  }
+
+  .custom-accordion-row__body-inner > *:first-child {
+    margin-top: 0;
+  }
+
+  .custom-accordion-row__icon {
+    transition: transform 0.28s ease;
+  }
+{% endstylesheet %}
+
+<script>
+  (function () {
+    const details = document.currentScript.previousElementSibling;
+    if (!details || details.tagName !== 'DETAILS') return;
+    const summary = details.querySelector('summary');
+    const body = details.querySelector('.custom-accordion-row__body');
+    if (!summary || !body) return;
+
+    let animating = false;
+
+    function openRow() {
+      details.open = true;
+      body.style.maxHeight = body.scrollHeight + 'px';
+      animating = true;
+      body.addEventListener('transitionend', function done() {
+        body.style.maxHeight = 'none';
+        animating = false;
+        body.removeEventListener('transitionend', done);
+      }, { once: true });
+    }
+
+    function closeRow() {
+      body.style.maxHeight = body.scrollHeight + 'px';
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          body.style.maxHeight = '0px';
+        });
+      });
+      animating = true;
+      body.addEventListener('transitionend', function done() {
+        details.open = false;
+        animating = false;
+        body.removeEventListener('transitionend', done);
+      }, { once: true });
+    }
+
+    if (details.open) {
+      body.style.maxHeight = 'none';
+    }
+
+    summary.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (animating) return;
+      details.open ? closeRow() : openRow();
+    });
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "Accordion row",
+  "tag": null,
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Product Description"
+    },
+    {
+      "type": "richtext",
+      "id": "content",
+      "label": "Content",
+      "default": "<p>Add your content here.</p>"
+    },
+    {
+      "type": "checkbox",
+      "id": "open_by_default",
+      "label": "Open by default",
+      "default": false
+    }
+  ],
+  "presets": [
+    {
+      "name": "Accordion row",
+      "category": "Product"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,180 @@
+{%- liquid
+  assign block_settings = block.settings
+-%}
+
+<div
+  class="custom-accordion spacing-style custom-accordion--{{ block_settings.visibility }}"
+  style="
+    {% render 'spacing-style', settings: block_settings %}
+    --accordion-border: {{ block_settings.border_color }};
+    --accordion-background: {{ block_settings.background_color }};
+    --accordion-heading-color: {{ block_settings.heading_color }};
+    --accordion-body-color: {{ block_settings.body_color }};
+    --accordion-icon-color: {{ block_settings.icon_color }};
+    --accordion-radius: {{ block_settings.corner_radius }}px;
+    --accordion-gap: {{ block_settings.row_gap }}px;
+  "
+  {{ block.shopify_attributes }}
+>
+  {% content_for 'blocks' %}
+</div>
+
+{% stylesheet %}
+  .custom-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: var(--accordion-gap, 12px);
+  }
+
+  @media screen and (max-width: 749px) {
+    .custom-accordion--desktop {
+      display: none;
+    }
+  }
+
+  @media screen and (min-width: 750px) {
+    .custom-accordion--mobile {
+      display: none;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Custom accordion",
+  "tag": null,
+  "blocks": [
+    {
+      "type": "_custom-accordion-row"
+    }
+  ],
+  "settings": [
+    {
+      "type": "select",
+      "id": "visibility",
+      "label": "Show on",
+      "options": [
+        { "value": "both", "label": "Desktop & mobile" },
+        { "value": "desktop", "label": "Desktop only" },
+        { "value": "mobile", "label": "Mobile only" }
+      ],
+      "default": "both"
+    },
+    {
+      "type": "header",
+      "content": "Colors"
+    },
+    {
+      "type": "color",
+      "id": "border_color",
+      "label": "Border color",
+      "default": "#E5E5E5"
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background color",
+      "default": "#FFFFFF"
+    },
+    {
+      "type": "color",
+      "id": "heading_color",
+      "label": "Heading text color",
+      "default": "#1A1A1A"
+    },
+    {
+      "type": "color",
+      "id": "body_color",
+      "label": "Body text color",
+      "default": "#444444"
+    },
+    {
+      "type": "color",
+      "id": "icon_color",
+      "label": "Icon color",
+      "default": "#1A1A1A"
+    },
+    {
+      "type": "header",
+      "content": "Style"
+    },
+    {
+      "type": "range",
+      "id": "corner_radius",
+      "label": "Corner radius",
+      "min": 0,
+      "max": 30,
+      "step": 1,
+      "unit": "px",
+      "default": 8
+    },
+    {
+      "type": "range",
+      "id": "row_gap",
+      "label": "Gap between rows",
+      "min": 0,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "default": 12
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-start",
+      "label": "Left",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-end",
+      "label": "Right",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "Custom accordion",
+      "category": "Product",
+      "blocks": {
+        "row_1": { "type": "_custom-accordion-row", "settings": { "heading": "Product Description" } },
+        "row_2": { "type": "_custom-accordion-row", "settings": { "heading": "Ingredients & Nutrition" } },
+        "row_3": { "type": "_custom-accordion-row", "settings": { "heading": "Frequently Asked Questions" } },
+        "row_4": { "type": "_custom-accordion-row", "settings": { "heading": "Shipping, Returns & 60 Day Guarantee" } }
+      },
+      "block_order": ["row_1", "row_2", "row_3", "row_4"]
+    }
+  ]
+}
+{% endschema %}

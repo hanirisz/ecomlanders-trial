@@ -1,0 +1,124 @@
+{%- doc -%}
+  A single checkmark + text item, meant to be repeated inside a "group" block (row direction,
+  wrapped) to build a feature checklist like "Ease everyday stiffness / Improve daily mobility".
+{%- enddoc -%}
+
+{%- liquid
+  assign block_settings = block.settings
+-%}
+
+<div
+  class="feature-checkmark spacing-style"
+  style="{% render 'spacing-style', settings: block_settings %}"
+  {{ block.shopify_attributes }}
+>
+  {%- if block_settings.checkmark_image != blank -%}
+    <span class="feature-checkmark__icon">
+      {{ block_settings.checkmark_image | image_url: width: 100 | image_tag: alt: '', loading: 'lazy' }}
+    </span>
+  {%- endif -%}
+  {%- if block_settings.text != blank -%}
+    <span class="feature-checkmark__text">{{ block_settings.text }}</span>
+  {%- endif -%}
+</div>
+
+{% stylesheet %}
+  .group-block-content:has(> .feature-checkmark) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, max-content));
+    justify-content: start;
+    width: 100%;
+    max-width: 100%;
+    gap: 0.5rem 1.5rem !important;
+  }
+
+  .feature-checkmark {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-2xs, 0.5rem);
+    min-width: 0;
+  }
+
+  .feature-checkmark__icon,
+  .feature-checkmark__icon img {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+    flex-shrink: 0;
+  }
+
+  .feature-checkmark__text {
+    font-size: clamp(14px, 3.5vw, 16px);
+    line-height: 1.3;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Feature checkmark",
+  "tag": null,
+  "settings": [
+    {
+      "type": "text",
+      "id": "text",
+      "label": "Text",
+      "default": "Ease everyday stiffness"
+    },
+    {
+      "type": "image_picker",
+      "id": "checkmark_image",
+      "label": "Checkmark icon"
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 4
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 4
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-start",
+      "label": "Left",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-end",
+      "label": "Right",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "Feature checkmark",
+      "category": "Product"
+    }
+  ]
+}
+{% endschema %}
