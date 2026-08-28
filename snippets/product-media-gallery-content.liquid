@@ -1070,7 +1070,11 @@
   .media-gallery--carousel slideshow-arrows .slideshow-control svg {
     color: #095946 !important;
   }
-
+@media screen and (min-width: 750px) {
+  .product-media-gallery-host media-gallery.media-gallery--carousel {
+    --thumbnail-width: 60px;
+  }
+}
   @media screen and (max-width: 749px) {
     slideshow-component:has(:not(.mobile\:hidden) :is(.slideshow-controls__dots, .slideshow-controls__counter))
       .shopify-model-viewer-ui__controls-area {
