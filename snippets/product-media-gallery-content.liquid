@@ -86,13 +86,9 @@
     assign pagination_position = 'center'
   endif
 
+  # correct discrepancy between position settings for thumbnails and other controls
   if pagination_position == 'bottom'
     assign pagination_position = 'center'
-  endif
-
-  assign mobile_pagination_position = block_settings.thumbnail_position_mobile | default: 'bottom'
-  if mobile_pagination_position == 'bottom'
-    assign mobile_pagination_position = 'center'
   endif
 
   assign icons_position = 'center'
