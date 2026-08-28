@@ -415,6 +415,7 @@
                   "type": "feature-checkmark",
                   "settings": {
                     "text": "Ease everyday stiffness",
+                    "checkmark_image": "shopify://shop_images/Untitled_design_-_2026-07-03T045232.699.png",
                     "padding-block-start": 4,
                     "padding-block-end": 4,
                     "padding-inline-start": 0,
@@ -426,6 +427,7 @@
                   "type": "feature-checkmark",
                   "settings": {
                     "text": "Improve daily mobility",
+                    "checkmark_image": "shopify://shop_images/Untitled_design_-_2026-07-03T045232.699.png",
                     "padding-block-start": 4,
                     "padding-block-end": 4,
                     "padding-inline-start": 0,
@@ -437,6 +439,7 @@
                   "type": "feature-checkmark",
                   "settings": {
                     "text": "Support joint comfort",
+                    "checkmark_image": "shopify://shop_images/Untitled_design_-_2026-07-03T045232.699.png",
                     "padding-block-start": 4,
                     "padding-block-end": 4,
                     "padding-inline-start": 0,
@@ -448,6 +451,7 @@
                   "type": "feature-checkmark",
                   "settings": {
                     "text": "Feel more flexible",
+                    "checkmark_image": "shopify://shop_images/Untitled_design_-_2026-07-03T045232.699.png",
                     "padding-block-start": 4,
                     "padding-block-end": 4,
                     "padding-inline-start": 0,
@@ -494,7 +498,8 @@
                     "unit_count": 1,
                     "unit_label": "bottle",
                     "banner_text": "",
-                    "best_value_badge": false
+                    "best_value_badge": false,
+                    "image_override": "shopify://shop_images/image_25345_b10e4101-4e0b-4ca4-a943-f6f2bb96d7e6.png"
                   },
                   "blocks": {}
                 },
@@ -507,7 +512,8 @@
                     "unit_count": 3,
                     "unit_label": "bottle",
                     "banner_text": "<strong>92% of customers</strong> choose: Buy 2, Get 1 Free",
-                    "best_value_badge": false
+                    "best_value_badge": false,
+                    "image_override": "shopify://shop_images/Group_2087327335_ac99580b-4811-4a00-bbf8-432372f94cd0.png"
                   },
                   "blocks": {}
                 },
@@ -520,7 +526,8 @@
                     "unit_count": 5,
                     "unit_label": "bottle",
                     "banner_text": "",
-                    "best_value_badge": true
+                    "best_value_badge": true,
+                    "image_override": "shopify://shop_images/Group_2087327334_f0438f36-eb20-4f15-b577-f9a39598e5f9.png"
                   },
                   "blocks": {}
                 }
