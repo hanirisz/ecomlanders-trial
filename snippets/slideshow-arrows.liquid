@@ -57,6 +57,25 @@
     }
   }
 
+  .media-gallery--carousel slideshow-arrows .slideshow-control[disabled],
+.media-gallery--carousel slideshow-arrows .slideshow-control:disabled {
+  opacity: 0.35 !important;
+  pointer-events: none;
+  cursor: default;
+}
+
+@media screen and (min-width: 750px) {
+  .media-gallery--carousel slideshow-controls[thumbnails] .slideshow-controls__thumbnails {
+    max-height: calc(var(--thumbnail-width) * 5 + var(--gap-sm, 8px) * 4);
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+
+  .media-gallery--carousel slideshow-controls[thumbnails] .slideshow-controls__thumbnails::-webkit-scrollbar {
+    display: none;
+  }
+}
+
   slideshow-arrows:has(.slideshow-control--shape-square),
   slideshow-arrows:has(.slideshow-control--shape-circle) {
     mix-blend-mode: normal;
