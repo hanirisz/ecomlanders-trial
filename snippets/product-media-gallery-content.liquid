@@ -1108,7 +1108,9 @@
     width: 100% !important;
     height: 100% !important;
   }
-    @media screen and (max-width: 749px) {
+
+
+@media screen and (max-width: 749px) {
     .product-media-gallery-host .media-gallery--carousel slideshow-component {
       display: flex;
       flex-direction: row-reverse;
@@ -1132,8 +1134,10 @@
         .product-information__media {
         padding: 15px !important;
     }
-        .product-media-gallery-host .media-gallery--carousel slideshow-container {
+       .product-media-gallery-host .media-gallery--carousel slideshow-container {
       overflow: visible !important;
+      min-width: 0;
+      flex: 1 1 auto;
     }
 
     .product-media-gallery-host .media-gallery--carousel slideshow-arrows {
